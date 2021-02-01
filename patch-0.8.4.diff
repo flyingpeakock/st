@@ -1,5 +1,24 @@
+diff --git a/README b/README
+index 6a846ed..3b5d0e9 100644
+--- a/README
++++ b/README
+@@ -2,6 +2,14 @@ st - simple terminal
+ --------------------
+ st is a simple terminal emulator for X which sucks less.
+ 
++Patches
++-------
++This version of st has the following patches applied.
++    - Nordtheme
++    - Scrollback-mouse
++    - Alpha
++    - Selectioncolors
++
+ 
+ Requirements
+ ------------
 diff --git a/config.def.h b/config.def.h
-index 6f05dce..52d03d0 100644
+index 6f05dce..9c45f5a 100644
 --- a/config.def.h
 +++ b/config.def.h
 @@ -5,8 +5,8 @@
@@ -99,12 +118,14 @@ index 6f05dce..52d03d0 100644
  	{ XK_ANY_MOD,           Button2, selpaste,       {.i = 0},      1 },
  	{ ShiftMask,            Button4, ttysend,        {.s = "\033[5;2~"} },
  	{ XK_ANY_MOD,           Button4, ttysend,        {.s = "\031"} },
-@@ -199,6 +211,8 @@ static Shortcut shortcuts[] = {
+@@ -199,6 +211,10 @@ static Shortcut shortcuts[] = {
  	{ TERMMOD,              XK_Y,           selpaste,       {.i =  0} },
  	{ ShiftMask,            XK_Insert,      selpaste,       {.i =  0} },
  	{ TERMMOD,              XK_Num_Lock,    numlock,        {.i =  0} },
 +	{ ShiftMask,            XK_Page_Up,     kscrollup,      {.i = -1} },
 +	{ ShiftMask,            XK_Page_Down,   kscrolldown,    {.i = -1} },
++    { MODKEY,               XK_l,           copyurl,        {.i =  0} },
++    { MODKEY,               XK_o,           opencopied,     {.v = "xdg-open"} },
  };
  
  /*
@@ -122,7 +143,7 @@ index c070a4a..aaa54ff 100644
         `$(PKG_CONFIG) --libs freetype2`
  
 diff --git a/st.c b/st.c
-index 76b7e0d..166f037 100644
+index 76b7e0d..fe4f573 100644
 --- a/st.c
 +++ b/st.c
 @@ -35,6 +35,7 @@
@@ -458,8 +479,74 @@ index 76b7e0d..166f037 100644
  	term.ocx = cx;
  	term.ocy = term.c.y;
  	xfinishdraw();
+@@ -2595,3 +2671,65 @@ redraw(void)
+ 	tfulldirt();
+ 	draw();
+ }
++
++/* select and copy the previous url on screen (do nothing if there's no url).
++ * known bug: doesn't handle urls that span multiple lines (wontfix)
++ * known bug: only finds first url on line (mightfix)
++ */
++void
++copyurl(const Arg *arg) {
++	/* () and [] can appear in urls, but excluding them here will reduce false
++	 * positives when figuring out where a given url ends.
++	 */
++	static char URLCHARS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
++		"abcdefghijklmnopqrstuvwxyz"
++		"0123456789-._~:/?#@!$&'*+,;=%";
++
++	int i, row, startrow;
++	char *linestr = calloc(sizeof(char), term.col+1); /* assume ascii */
++	char *c, *match = NULL;
++
++	row = (sel.ob.x >= 0 && sel.nb.y > 0) ? sel.nb.y-1 : term.bot;
++	LIMIT(row, term.top, term.bot);
++	startrow = row;
++
++	/* find the start of the last url before selection */
++	do {
++		for (i = 0; i < term.col; ++i) {
++			if (term.line[row][i].u > 127) /* assume ascii */
++				continue;
++			linestr[i] = term.line[row][i].u;
++		}
++		linestr[term.col] = '\0';
++		if ((match = strstr(linestr, "http://"))
++				|| (match = strstr(linestr, "https://")))
++			break;
++		if (--row < term.top)
++			row = term.bot;
++	} while (row != startrow);
++
++	if (match) {
++		/* must happen before trim */
++		selclear();
++		sel.ob.x = strlen(linestr) - strlen(match);
++
++		/* trim the rest of the line from the url match */
++		for (c = match; *c != '\0'; ++c)
++			if (!strchr(URLCHARS, *c)) {
++				*c = '\0';
++				break;
++			}
++
++		/* select and copy */
++		sel.mode = 1;
++		sel.type = SEL_REGULAR;
++		sel.oe.x = sel.ob.x + strlen(match)-1;
++		sel.ob.y = sel.oe.y = row;
++		selnormalize();
++		tsetdirt(sel.nb.y, sel.ne.y);
++		xsetsel(getsel());
++		xclipcopy();
++	}
++
++	free(linestr);
++}
 diff --git a/st.h b/st.h
-index 3d351b6..7f7f4f6 100644
+index 3d351b6..6e172c0 100644
 --- a/st.h
 +++ b/st.h
 @@ -33,6 +33,7 @@ enum glyph_attribute {
@@ -470,29 +557,31 @@ index 3d351b6..7f7f4f6 100644
  	ATTR_BOLD_FAINT = ATTR_BOLD | ATTR_FAINT,
  };
  
-@@ -81,12 +82,15 @@ void die(const char *, ...);
+@@ -81,12 +82,17 @@ void die(const char *, ...);
  void redraw(void);
  void draw(void);
  
 +void kscrolldown(const Arg *);
 +void kscrollup(const Arg *);
++void opencopied(const Arg *);
  void printscreen(const Arg *);
  void printsel(const Arg *);
  void sendbreak(const Arg *);
  void toggleprinter(const Arg *);
++void copyurl(const Arg *);
  
  int tattrset(int);
 +int tisaltscr(void);
  void tnew(int, int);
  void tresize(int, int);
  void tsetdirtattr(int);
-@@ -123,3 +127,4 @@ extern char *termname;
+@@ -123,3 +129,4 @@ extern char *termname;
  extern unsigned int tabspaces;
  extern unsigned int defaultfg;
  extern unsigned int defaultbg;
 +extern float alpha;
 diff --git a/x.c b/x.c
-index 210f184..1e38f29 100644
+index 210f184..9b2b48a 100644
 --- a/x.c
 +++ b/x.c
 @@ -34,6 +34,7 @@ typedef struct {
@@ -798,3 +887,26 @@ index 210f184..1e38f29 100644
  	case 'c':
  		opt_class = EARGF(usage());
  		break;
+@@ -2047,3 +2091,22 @@ run:
+ 
+ 	return 0;
+ }
++
++void
++opencopied(const Arg *arg)
++{
++	size_t const max_cmd = 2048;
++	char * const clip = xsel.clipboard;
++	if(!clip) {
++		fprintf(stderr, "Warning: nothing copied to clipboard\n");
++		return;
++	}
++
++	/* account for space/quote (3) and \0 (1) and & (1) */
++	/* e.g.: xdg-open "https://st.suckless.org"& */
++	size_t const cmd_size = max_cmd + strlen(clip) + 5;
++	char cmd[cmd_size];
++
++	snprintf(cmd, cmd_size, "%s \"%s\"&", (char *)arg->v, clip);
++	system(cmd);
++}

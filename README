@@ -9,6 +9,12 @@ This version of st has the following patches applied.
     - Scrollback-mouse
     - Alpha
     - Selectioncolors
+    - Anysize
+    - Boxdraw
+    - CopyUrl
+    - Sync
+    - Open Copied Url
+    - Vertcenter
 
 
 Requirements

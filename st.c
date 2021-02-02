@@ -2749,7 +2749,10 @@ copyurl(const Arg *arg) {
 		}
 		linestr[term.col] = '\0';
 		if ((match = strstr(linestr, "http://"))
-				|| (match = strstr(linestr, "https://")))
+				|| (match = strstr(linestr, "https://"))
+                || (match = strstr(linestr, "www."))
+                || (match = strstr(linestr, "ftp://"))
+                || (match = strstr(linestr, "mailto://")))
 			break;
 		if (--row < term.top)
 			row = term.bot;

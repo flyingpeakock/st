@@ -39,5 +39,5 @@ the st terminfo entry with the following command:
 See the man page for additional details.
 
 ## Credits
-Based on Aurélien APTEL <aurelien dot aptel at gmail dot com> bt source code.
+Based on Aurélien APTEL <aurelien dot aptel at gmail dot com> bt source code.    
 https://st.suckless.org/patches/

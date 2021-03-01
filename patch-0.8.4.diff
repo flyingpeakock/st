@@ -668,16 +668,16 @@ index 39120b4..fc73c87 100644
  Paste from the clipboard selection.
 +.TP
 +.B Alt-k
-+Scroll up
++Scroll up.
 +.TP
 +.B Alt-J
-+Scroll down
++Scroll down.
 +.TP
 +.B Alt-l
-+Copy URL
++Copy URL.
 +.TP
 +.B Alt-o
-+Open copied URL
++Open copied URL.
  .SH CUSTOMIZATION
  .B st
  can be customized by creating a custom config.h and (re)compiling the source

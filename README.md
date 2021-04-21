@@ -4,7 +4,6 @@ st is a simple terminal emulator for X which sucks less.
 ## Patches
 This version of st has the following patches applied.
 * Nordtheme
-* Scrollback
 * Hidecursor
 * Alpha
 * Selectioncolors

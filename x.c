@@ -1554,7 +1554,6 @@ xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len, int x, i
 
 	/* Render underline and strikethrough. */
 	if (base.mode & ATTR_UNDERLINE) {
-<<<<<<< HEAD
 		// Underline Color
 		const int widthThreshold  = 28; // +1 width every widthThreshold px of font
 		int wlw = (win.ch / widthThreshold) + 1; // Wave Line Width

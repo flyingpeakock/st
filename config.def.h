@@ -139,10 +139,10 @@ static const char *colorname[] = {
  * Default colors (colorname index)
  * foreground, background, cursor, reverse cursor, selection
  */
-unsigned int defaultfg = 258;
-unsigned int defaultbg = 259;
+unsigned int defaultfg = 257;
+unsigned int defaultbg = 256;
 unsigned int defaultcs = 257;
-static unsigned int defaultrcs = 257;
+unsigned int defaultrcs = 257;
 unsigned int selectionbg = 0;
 unsigned int selectionfg = 257;
 /* If 0 use selectionfg as foreground in order to have a uniform foregorund-color */
